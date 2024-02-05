@@ -1,6 +1,6 @@
 import numpy as np
-import util
-from linear_model import LinearModel
+from src import util
+from src.linear_model import LinearModel
 
 
 def main(train_path, eval_path, pred_path):
@@ -13,11 +13,12 @@ def main(train_path, eval_path, pred_path):
     """
     x_train, y_train = util.load_dataset(train_path, add_intercept=True)
     x_eval, y_eval = util.load_dataset(eval_path, add_intercept=True)
+    print(pred_path)
 
     # *** START CODE HERE ***
     clf = LogisticRegression()
     clf.fit(x_train, y_train)
-    clf.predict(x_eval)
+    y_pred = clf.predict(x_eval)
     # *** END CODE HERE ***
 
 
@@ -49,12 +50,19 @@ class LogisticRegression(LinearModel):
             x: Training example inputs. Shape (m, n).
             y: Training example labels. Shape (m,).
         """
-
-        return -1 / x.shape[0] * x.T @ (y - self.h(theta, x))
+        m = x.shape[0]
+        return 1 / m * x.T @ (self.h(theta, x) - y)
 
     def hessian(self, theta, x):
         h_theta_x = np.reshape(self.h(theta, x), (-1, 1))
-        return 1 / x.shape[0] * x.T @ (h_theta_x * (1 - h_theta_x) * x)
+        m = x.shape[0]
+        return 1 / m * x.T @ (h_theta_x * (1 - h_theta_x) * np.identity(m)) @ x
+
+    def loss_function(self, theta, x, y):
+        h_theta_x = self.h(theta, x)
+        m = x.shape[0]
+
+        return -1 / m * y @ np.log(h_theta_x) + (1 - y) @ np.log(h_theta_x)
 
     def fit(self, x, y):
         """Run Newton's Method to minimize J(theta) for logistic regression.
@@ -64,12 +72,16 @@ class LogisticRegression(LinearModel):
             y: Training example labels. Shape (m,).
         """
         # *** START CODE HERE ***
-        self.initialize_theta(x.shape[1])
+        num_features = x.shape[1]
+        self.initialize_theta(num_features)
+        epsilon = 1e-5
 
-        for _ in range(10):
+        while True:
             self.theta = self.theta - np.linalg.inv(self.hessian(self.theta, x)) @ self.gradient(
                 self.theta, x, y
             )
+            if self.loss_function(self.theta, x, y) < epsilon:
+                break
 
         # *** END CODE HERE ***
 
@@ -86,5 +98,5 @@ class LogisticRegression(LinearModel):
             Outputs of shape (m,).
         """
         # *** START CODE HERE ***
-        return self.h(self.theta, x)
+        return self.h(self.theta, x) >= 0.5
         # *** END CODE HERE ***
