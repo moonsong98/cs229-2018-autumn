@@ -1,7 +1,6 @@
 import numpy as np
-import util
-
-from linear_model import LinearModel
+from src import util
+from src.linear_model import LinearModel
 
 
 def main(lr, train_path, eval_path, pred_path):
@@ -31,6 +30,9 @@ class PoissonRegression(LinearModel):
         > clf.predict(x_eval)
     """
 
+    def h(self, x):
+        return np.exp(x @ self.theta)
+
     def fit(self, x, y):
         """Run gradient ascent to maximize likelihood for Poisson regression.
 
@@ -38,7 +40,17 @@ class PoissonRegression(LinearModel):
             x: Training example inputs. Shape (m, n).
             y: Training example labels. Shape (m,).
         """
+
         # *** START CODE HERE ***
+        def next_step(y, x):
+            return 1 / m * x.T @ (y - self.h(x))
+
+        m, n = x.shape
+        self.theta = np.zeros(n)
+        ns = next_step(y, x)
+        while np.linalg.norm(ns, 1) > self.eps:
+            ns = next_step(y, x)
+            self.theta = self.theta + self.step_size * ns
         # *** END CODE HERE ***
 
     def predict(self, x):
@@ -51,4 +63,5 @@ class PoissonRegression(LinearModel):
             Floating-point prediction for each input, shape (m,).
         """
         # *** START CODE HERE ***
+        return self.h(x)
         # *** END CODE HERE ***
