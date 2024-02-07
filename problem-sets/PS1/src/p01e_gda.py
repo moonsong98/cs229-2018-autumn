@@ -1,7 +1,9 @@
 import numpy as np
-import util
+from src import util
+from src.linear_model import LinearModel
 
-from linear_model import LinearModel
+# import util
+# from linear_model import LinearModel
 
 
 def main(train_path, eval_path, pred_path):
@@ -14,8 +16,12 @@ def main(train_path, eval_path, pred_path):
     """
     # Load dataset
     x_train, y_train = util.load_dataset(train_path, add_intercept=False)
+    x_eval, y_eval = util.load_dataset(eval_path, add_intercept=False)
 
     # *** START CODE HERE ***
+    clf = GDA()
+    clf.fit(x_train, y_train)
+    y_pred = clf.predict(x_eval)
     # *** END CODE HERE ***
 
 
@@ -39,6 +45,24 @@ class GDA(LinearModel):
             theta: GDA model parameters.
         """
         # *** START CODE HERE ***
+        m = x.shape[0]
+        phi = 1 / m * np.sum(y)
+        mu_0 = x.T @ (1 - y) / np.sum(1 - y)
+        mu_1 = x.T @ y / np.sum(y)
+        sigma = (
+            1
+            / m
+            * (
+                (x - mu_0).T @ ((1 - y) * np.identity(m)) @ (x - mu_0)
+                + (x - mu_1).T @ (y * np.identity(m)) @ (x - mu_1)
+            )
+        )
+
+        self.theta = np.linalg.inv(sigma) @ (mu_1 - mu_0)
+        self.theta_0 = 1 / 2 * (mu_0 + mu_1).T @ np.linalg.inv(sigma) @ (mu_0 - mu_1) - np.log(
+            (1 - phi) / phi
+        )
+        self.theta = np.insert(self.theta, 0, self.theta_0)
         # *** END CODE HERE ***
 
     def predict(self, x):
@@ -51,4 +75,5 @@ class GDA(LinearModel):
             Outputs of shape (m,).
         """
         # *** START CODE HERE ***
+        return x @ self.theta >= 0
         # *** END CODE HERE

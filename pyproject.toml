@@ -9,6 +9,7 @@ packages = [{include = "cs229_2018_autumn"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 matplotlib = "^3.8.2"
+autoflake = "^2.2.1"
 
 
 [tool.poetry.group.dev.dependencies]

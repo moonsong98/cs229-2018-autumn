@@ -2,6 +2,9 @@ import numpy as np
 from src import util
 from src.linear_model import LinearModel
 
+# import util
+# from linear_model import LinearModel
+
 
 def main(train_path, eval_path, pred_path):
     """Problem 1(b): Logistic regression with Newton's Method.
